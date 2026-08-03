@@ -1,0 +1,17 @@
+.env
+
+*.log
+
+backup/
+
+data/
+
+mysql/
+
+vendor/
+
+.idea/
+
+.vscode/
+
+.DS_Store

@@ -1,0 +1,57 @@
+services:
+  mariadb:
+    image: mariadb:10.11
+    container_name: cacti-db
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      TZ: ${TZ}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - cacti-network
+
+  cacti:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: cacti
+
+    restart: unless-stopped
+
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+    env_file:
+      - .env
+
+    ports:
+      - "8080:80"
+
+    networks:
+      - cacti-network
+
+volumes:
+  mariadb_data:
+
+networks:
+  cacti-network:
+    driver: bridge

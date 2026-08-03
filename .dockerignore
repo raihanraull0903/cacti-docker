@@ -1,0 +1,38 @@
+# Git
+.git
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+logs/
+
+# Temporary
+*.tmp
+*.temp
+
+# Dependencies
+vendor/
+node_modules/
+
+# Docker
+docker-compose.override.yml
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup
+backup/
+*.bak
+
+# Database
+*.sql
+*.sqlite
+*.db
