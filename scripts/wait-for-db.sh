@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 echo "Waiting for MariaDB..."
 
 until mysql \
