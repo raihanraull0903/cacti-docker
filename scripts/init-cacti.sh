@@ -51,16 +51,18 @@ if [ "$TABLES" = "0" ]; then
 fi
 
 # ---------------------------------------------------
-# FORCE FULL VERSION FLAGS IN DATABASE
+# FORCE FULL VERSION FLAGS & DEFAULT ADMIN PASSWORD
 # ---------------------------------------------------
-echo "Injecting version flags into DB..."
+echo "Injecting version flags and resetting admin password to 'admin'..."
 mysql --skip-ssl -h mariadb -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" "${MYSQL_DATABASE}" <<EOF
 DELETE FROM version;
 INSERT INTO version (cacti) VALUES ('1.2.31');
 INSERT INTO settings (name, value) VALUES ('cacti_version', '1.2.31') ON DUPLICATE KEY UPDATE value='1.2.31';
 INSERT INTO settings (name, value) VALUES ('install_complete', '1') ON DUPLICATE KEY UPDATE value='1';
-EOF
 
+-- Reset password user 'admin' ke default 'admin'
+UPDATE user_auth SET password = '\$2y\$10\$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi' WHERE username = 'admin';
+EOF
 
 # ---------------------------------------------------
 # Permission
