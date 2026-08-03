@@ -51,18 +51,51 @@ if [ "$TABLES" = "0" ]; then
 fi
 
 # ---------------------------------------------------
-# FORCE FULL VERSION FLAGS & DEFAULT ADMIN PASSWORD
+# FORCE FULL VERSION FLAGS & DEFAULT ADMIN ACCOUNT
 # ---------------------------------------------------
-echo "Injecting version flags and resetting admin password to 'admin'..."
+echo "Injecting version flags and setting up full admin account..."
 mysql --skip-ssl -h mariadb -u"${MYSQL_USER}" -p"${MYSQL_PASSWORD}" "${MYSQL_DATABASE}" <<EOF
 DELETE FROM version;
 INSERT INTO version (cacti) VALUES ('1.2.31');
 INSERT INTO settings (name, value) VALUES ('cacti_version', '1.2.31') ON DUPLICATE KEY UPDATE value='1.2.31';
 INSERT INTO settings (name, value) VALUES ('install_complete', '1') ON DUPLICATE KEY UPDATE value='1';
-
--- Reset password user 'admin' ke default 'admin'
-UPDATE user_auth SET password = '\$2y\$10\$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi' WHERE username = 'admin';
+INSERT INTO settings (name, value) VALUES ('auth_method', '1') ON DUPLICATE KEY UPDATE value='1';
+UPDATE settings SET value = '0' WHERE name IN ('guest_user', 'user_template', 'autologin_user');
 EOF
+
+echo "Setting up clean default admin user (admin/admin)..."
+php -r "
+require_once('/var/www/html/cacti/include/global.php');
+
+// Clear old admin user entries
+db_execute('DELETE FROM user_auth WHERE username = \"admin\" OR id = 1');
+db_execute('DELETE FROM user_auth_realm WHERE user_id = 1');
+
+// Bcrypt Hash for password 'admin'
+\$hash = password_hash('admin', PASSWORD_BCRYPT);
+
+// Re-create complete admin account
+db_execute_prepared('INSERT INTO user_auth (
+    id, username, password, realm, full_name, must_change_password, 
+    password_change, show_tree, show_list, show_preview, login_opts, 
+    policy_graphs, policy_trees, policy_hosts, policy_graph_templates, enabled, locked, failed_attempts
+) VALUES (
+    1, \"admin\", ?, 0, \"Administrator\", \"on\", \"on\", \"on\", \"on\", \"on\", 
+    1, 1, 1, 1, 1, \"on\", \"\", 0
+)', array(\$hash));
+
+db_execute('UPDATE user_auth SET enabled = \"on\" WHERE id = 1');
+
+// Inject ALL Realm IDs (1-150) so Console, Graphs, Reporting, Logs tabs work
+for (\$i = 1; \$i <= 150; \$i++) {
+    db_execute_prepared('INSERT IGNORE INTO user_auth_realm (realm_id, user_id) VALUES (?, 1)', array(\$i));
+}
+
+db_execute('TRUNCATE TABLE sessions');
+" || true
+
+
+
 
 # ---------------------------------------------------
 # Permission
