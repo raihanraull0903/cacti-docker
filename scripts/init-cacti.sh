@@ -52,9 +52,6 @@ sed -i "s/\$cacti_session_name *=.*/\$cacti_session_name = 'Cacti';/" \
 # ---------------------------------------------------
 # Check database
 # ---------------------------------------------------
-# ---------------------------------------------------
-# Check database
-# ---------------------------------------------------
 TABLES=$(mysql \
 --skip-ssl \
 -h mariadb \
@@ -74,17 +71,7 @@ if [ "$TABLES" = "0" ]; then
     --database="${MYSQL_DATABASE}" \
     < /var/www/html/cacti/cacti.sql
 
-    echo "Setting up Cacti version flags..."
-    mysql \
-    --skip-ssl \
-    -h mariadb \
-    --user="${MYSQL_USER}" \
-    --password="${MYSQL_PASSWORD}" \
-    --database="${MYSQL_DATABASE}" \
-    -e "INSERT INTO version (cacti) VALUES ('1.2.31') ON DUPLICATE KEY UPDATE cacti='1.2.31';
-        INSERT INTO settings (name, value) VALUES ('cacti_version', '1.2.31') ON DUPLICATE KEY UPDATE value='1.2.31';"
-
-    echo "Database Imported and Initialized successfully."
+    echo "Database Imported successfully."
 
 else
 
@@ -92,6 +79,18 @@ else
 
 fi
 
+# ---------------------------------------------------
+# ALWAYS FORCE CACTI VERSION (Bypass Installer Wizard)
+# ---------------------------------------------------
+echo "Setting up Cacti version flags..."
+mysql \
+--skip-ssl \
+-h mariadb \
+--user="${MYSQL_USER}" \
+--password="${MYSQL_PASSWORD}" \
+--database="${MYSQL_DATABASE}" \
+-e "INSERT INTO version (cacti) VALUES ('1.2.31') ON DUPLICATE KEY UPDATE cacti='1.2.31';
+    INSERT INTO settings (name, value) VALUES ('cacti_version', '1.2.31') ON DUPLICATE KEY UPDATE value='1.2.31';"
 
 # ---------------------------------------------------
 # Permission
