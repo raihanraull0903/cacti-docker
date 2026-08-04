@@ -94,8 +94,21 @@ for (\$i = 1; \$i <= 150; \$i++) {
 db_execute('TRUNCATE TABLE sessions');
 " || true
 
+# =====================================================
+# Auto-Import Seluruh Package XML Cacti
+# =====================================================
+echo "==> Meng-import ulang seluruh Package XML bawaan Cacti..."
 
+# Gunakan flag --remove-orphans agar Cacti melakukan commit/import nyata ke database
+find /var/www/html/cacti/install/templates/ -type f \( -name "*.xml" -o -name "*.gz" \) | while read -r pkg; do
+    echo "Importing package: $pkg"
+    php /var/www/html/cacti/cli/import_package.php --filename="$pkg" --remove-orphans || true
+done
 
+# Sync/Refresh cache template di database
+php /var/www/html/cacti/cli/repair_templates.php --execute || true
+
+echo "==> Import Package XML Cacti Selesai 100%!"
 
 # ---------------------------------------------------
 # Permission
@@ -106,3 +119,5 @@ chown -R www-data:www-data /var/www/html/cacti
 chmod -R 755 /var/www/html/cacti
 
 echo "Initialization Complete."
+
+
