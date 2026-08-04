@@ -12,7 +12,15 @@ ENV DEBIAN_FRONTEND=noninteractive
 # =====================================================
 # Install Linux Packages
 # =====================================================
-RUN apt-get update && apt-get install -y \
+# =====================================================
+# Install Linux Packages
+# =====================================================
+RUN sed -i 's/deb.debian.org/cdn-fastly.deb.debian.org/g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || true \
+    && apt-get -o Acquire::http::Timeout="60" \
+               -o Acquire::http::Pipeline-Depth="0" \
+               -o Acquire::http::No-Cache="true" \
+               -o Acquire::Retries="5" update \
+    && apt-get install -y --no-install-recommends \
     wget \
     curl \
     unzip \
@@ -37,6 +45,9 @@ RUN apt-get update && apt-get install -y \
     libreadline-dev \
     libsqlite3-dev \
     && rm -rf /var/lib/apt/lists/*
+
+
+
 # =====================================================
 # PHP Extensions
 # =====================================================

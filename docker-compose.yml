@@ -31,7 +31,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-
+      network: host
     container_name: cacti
 
     restart: unless-stopped
